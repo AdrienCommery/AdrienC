@@ -28,13 +28,13 @@ const Dashboard = ({ stats, config, onPeriodChange }) => {
   };
 
   const getCAPrimeLevel = () => {
-    const ca = stats.ca_prime_progress;
+    const vehicles = stats.ca_prime_progress; // Now it's the number of vehicles
     const thresholds = config.ca_prime_thresholds;
     
-    if (ca >= 90000) return { level: 90000, prime: thresholds['90000'], color: 'bg-green-500' };
-    if (ca >= 70000) return { level: 70000, prime: thresholds['70000'], color: 'bg-green-500' };
-    if (ca >= 60000) return { level: 60000, prime: thresholds['60000'], color: 'bg-green-500' };
-    if (ca >= 50000) return { level: 50000, prime: thresholds['50000'], color: 'bg-green-500' };
+    if (vehicles >= 90) return { level: 90, prime: thresholds['90'], color: 'bg-green-500' };
+    if (vehicles >= 70) return { level: 70, prime: thresholds['70'], color: 'bg-green-500' };
+    if (vehicles >= 60) return { level: 60, prime: thresholds['60'], color: 'bg-green-500' };
+    if (vehicles >= 50) return { level: 50, prime: thresholds['50'], color: 'bg-green-500' };
     return { level: 0, prime: 0, color: 'bg-red-500' };
   };
 
