@@ -89,7 +89,7 @@ class PeriodStats(BaseModel):
     ca_mensuel: float
     vehicules_livres_ce_mois: int
     q1_prime_progress: int
-    ca_prime_progress: float
+    ca_prime_progress: int  # Changed from float to int (number of vehicles)
     commission_vente: float
     commission_financement: float
 
