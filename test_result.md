@@ -234,3 +234,5 @@ agent_communication:
     message: "Backend testing completed. Now ready for frontend testing of SALESBOARD TPL interface including sales tracking, dynamic dashboard, and period management features."
   - agent: "testing"
     message: "CRITICAL BACKEND ISSUES FOUND: Frontend UI is perfectly implemented and functional, but all core features fail due to backend API problems. Sales POST requests return 500 errors, stats GET requests return 404 errors. Backend endpoints need immediate attention before frontend can work properly. Focus on fixing /api/sales POST and /api/stats GET endpoints."
+  - agent: "main"
+    message: "FIXED BACKEND ISSUES: Updated all date fields from date type to str type to resolve BSON serialization errors. Fixed datetime handling in create_sale endpoint. Ready for re-testing backend functionality."
