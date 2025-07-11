@@ -447,6 +447,10 @@ async def update_commission_rates(rates: dict):
         config = await db.commission_config.find_one()
         if not config:
             config = CommissionConfig().dict()
+        else:
+            # Remove MongoDB ObjectId to avoid serialization issues
+            if '_id' in config:
+                del config['_id']
         
         # Update rates
         if 'payplan_rates' in rates:
@@ -470,7 +474,9 @@ async def update_commission_rates(rates: dict):
             upsert=True
         )
         
-        return {"message": "Commission rates updated successfully", "config": config}
+        # Return clean config without ObjectId for response
+        clean_config = {k: v for k, v in config.items() if k != '_id'}
+        return {"message": "Commission rates updated successfully", "config": clean_config}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating rates: {str(e)}")
