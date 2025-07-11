@@ -364,6 +364,388 @@ def test_commission_configuration_management(results):
     except Exception as e:
         results.log_fail("PUT /api/config", f"Exception: {str(e)}")
 
+def test_commission_settings_api(results):
+    """Test the new Commission Settings API endpoints"""
+    print("\n--- Testing Commission Settings API (NEW FEATURES) ---")
+    
+    # Test GET /api/commission-rates - Retrieve detailed commission rates
+    try:
+        response = requests.get(f"{BASE_URL}/commission-rates", timeout=10)
+        if response.status_code == 200:
+            rates = response.json()
+            
+            # Check required fields for configuration page
+            required_fields = ["payplan_rates", "financing_rates", "q1_prime", "ca_prime_thresholds"]
+            missing_fields = [field for field in required_fields if field not in rates]
+            
+            if not missing_fields:
+                results.log_pass("GET /api/commission-rates - All required fields present")
+            else:
+                results.log_fail("GET /api/commission-rates", f"Missing fields: {missing_fields}")
+            
+            # Verify payplan_rates structure
+            payplan_rates = rates.get("payplan_rates", {})
+            if "camping_car" in payplan_rates and "fourgon_van" in payplan_rates:
+                results.log_pass("GET /api/commission-rates - Payplan rates structure")
+                
+                # Verify default rates
+                if payplan_rates["camping_car"] == 0.055:
+                    results.log_pass("GET /api/commission-rates - CAMPING-CAR rate (5.5%)")
+                else:
+                    results.log_fail("GET /api/commission-rates - CAMPING-CAR rate", f"Expected 0.055, got {payplan_rates['camping_car']}")
+                
+                if payplan_rates["fourgon_van"] == 0.065:
+                    results.log_pass("GET /api/commission-rates - FOURGON/VAN rate (6.5%)")
+                else:
+                    results.log_fail("GET /api/commission-rates - FOURGON/VAN rate", f"Expected 0.065, got {payplan_rates['fourgon_van']}")
+            else:
+                results.log_fail("GET /api/commission-rates - Payplan rates", "Missing camping_car or fourgon_van rates")
+            
+            # Verify financing_rates structure (0-4 PC)
+            financing_rates = rates.get("financing_rates", {})
+            expected_pc_keys = ["0", "1", "2", "3", "4"]
+            if all(key in financing_rates for key in expected_pc_keys):
+                results.log_pass("GET /api/commission-rates - Financing rates (0-4 PC)")
+            else:
+                results.log_fail("GET /api/commission-rates - Financing rates", f"Missing PC keys, got: {list(financing_rates.keys())}")
+            
+            # Verify Q1 prime structure
+            q1_prime = rates.get("q1_prime", {})
+            if "amount" in q1_prime and "target" in q1_prime:
+                results.log_pass("GET /api/commission-rates - Q1 prime structure")
+                
+                if q1_prime["target"] == 35:
+                    results.log_pass("GET /api/commission-rates - Q1 prime target (35)")
+                else:
+                    results.log_fail("GET /api/commission-rates - Q1 prime target", f"Expected 35, got {q1_prime['target']}")
+            else:
+                results.log_fail("GET /api/commission-rates - Q1 prime", "Missing amount or target fields")
+            
+            # Verify CA prime thresholds (50, 60, 70, 90 vehicles)
+            ca_thresholds = rates.get("ca_prime_thresholds", {})
+            expected_vehicle_thresholds = ["50", "60", "70", "90"]
+            if all(key in ca_thresholds for key in expected_vehicle_thresholds):
+                results.log_pass("GET /api/commission-rates - CA prime thresholds (50, 60, 70, 90 vehicles)")
+                
+                # Verify threshold values
+                expected_values = {"50": 5000, "60": 6000, "70": 7000, "90": 11000}
+                if ca_thresholds == expected_values:
+                    results.log_pass("GET /api/commission-rates - CA prime threshold values")
+                else:
+                    results.log_fail("GET /api/commission-rates - CA prime values", f"Expected {expected_values}, got {ca_thresholds}")
+            else:
+                results.log_fail("GET /api/commission-rates - CA prime thresholds", f"Missing vehicle thresholds, got: {list(ca_thresholds.keys())}")
+                
+        else:
+            results.log_fail("GET /api/commission-rates", f"HTTP {response.status_code}: {response.text}")
+    except Exception as e:
+        results.log_fail("GET /api/commission-rates", f"Exception: {str(e)}")
+    
+    # Test PUT /api/commission-rates - Update commission rates
+    try:
+        # First get current rates
+        response = requests.get(f"{BASE_URL}/commission-rates", timeout=10)
+        if response.status_code == 200:
+            original_rates = response.json()
+            
+            # Test updating payplan rates
+            test_rates = {
+                "payplan_rates": {
+                    "camping_car": 0.060,  # Change from 5.5% to 6.0%
+                    "fourgon_van": 0.070   # Change from 6.5% to 7.0%
+                }
+            }
+            
+            update_response = requests.put(f"{BASE_URL}/commission-rates", json=test_rates, headers=HEADERS, timeout=10)
+            
+            if update_response.status_code == 200:
+                update_result = update_response.json()
+                if "message" in update_result and "updated successfully" in update_result["message"]:
+                    results.log_pass("PUT /api/commission-rates - Update payplan rates")
+                    
+                    # Verify the update persisted
+                    verify_response = requests.get(f"{BASE_URL}/commission-rates", timeout=10)
+                    if verify_response.status_code == 200:
+                        updated_rates = verify_response.json()
+                        if (updated_rates["payplan_rates"]["camping_car"] == 0.060 and 
+                            updated_rates["payplan_rates"]["fourgon_van"] == 0.070):
+                            results.log_pass("PUT /api/commission-rates - Payplan rates persistence")
+                        else:
+                            results.log_fail("PUT /api/commission-rates - Persistence", "Updated rates not persisted correctly")
+                    else:
+                        results.log_fail("PUT /api/commission-rates - Verification", "Could not verify updated rates")
+                else:
+                    results.log_fail("PUT /api/commission-rates - Response", f"Unexpected response: {update_result}")
+            else:
+                results.log_fail("PUT /api/commission-rates - Update payplan", f"HTTP {update_response.status_code}: {update_response.text}")
+            
+            # Test updating financing rates
+            test_financing = {
+                "financing_rates": {
+                    "0": 0.010,  # Change from 0.5% to 1.0%
+                    "1": 0.065,  # Change from 6.0% to 6.5%
+                    "2": 0.070,  # Change from 6.5% to 7.0%
+                    "3": 0.080,  # Change from 7.5% to 8.0%
+                    "4": 0.085   # Change from 8.0% to 8.5%
+                }
+            }
+            
+            financing_response = requests.put(f"{BASE_URL}/commission-rates", json=test_financing, headers=HEADERS, timeout=10)
+            if financing_response.status_code == 200:
+                results.log_pass("PUT /api/commission-rates - Update financing rates")
+            else:
+                results.log_fail("PUT /api/commission-rates - Financing rates", f"HTTP {financing_response.status_code}")
+            
+            # Test updating Q1 prime
+            test_q1 = {
+                "q1_prime": {
+                    "amount": 2000.0,  # Change from 1500€ to 2000€
+                    "target": 40       # Change from 35 to 40
+                }
+            }
+            
+            q1_response = requests.put(f"{BASE_URL}/commission-rates", json=test_q1, headers=HEADERS, timeout=10)
+            if q1_response.status_code == 200:
+                results.log_pass("PUT /api/commission-rates - Update Q1 prime")
+            else:
+                results.log_fail("PUT /api/commission-rates - Q1 prime", f"HTTP {q1_response.status_code}")
+            
+            # Test updating CA prime thresholds
+            test_ca_prime = {
+                "ca_prime_thresholds": {
+                    "50": 5500,   # Change from 5000€ to 5500€
+                    "60": 6500,   # Change from 6000€ to 6500€
+                    "70": 7500,   # Change from 7000€ to 7500€
+                    "90": 12000   # Change from 11000€ to 12000€
+                }
+            }
+            
+            ca_response = requests.put(f"{BASE_URL}/commission-rates", json=test_ca_prime, headers=HEADERS, timeout=10)
+            if ca_response.status_code == 200:
+                results.log_pass("PUT /api/commission-rates - Update CA prime thresholds")
+            else:
+                results.log_fail("PUT /api/commission-rates - CA prime thresholds", f"HTTP {ca_response.status_code}")
+            
+            # Restore original rates
+            try:
+                restore_response = requests.put(f"{BASE_URL}/commission-rates", json=original_rates, headers=HEADERS, timeout=10)
+                if restore_response.status_code == 200:
+                    results.log_pass("PUT /api/commission-rates - Restore original rates")
+                else:
+                    results.log_fail("PUT /api/commission-rates - Restore", "Could not restore original rates")
+            except Exception as e:
+                results.log_fail("PUT /api/commission-rates - Restore", f"Exception: {str(e)}")
+                
+        else:
+            results.log_fail("PUT /api/commission-rates - Get original", f"Could not get original rates: HTTP {response.status_code}")
+    except Exception as e:
+        results.log_fail("PUT /api/commission-rates", f"Exception: {str(e)}")
+
+def test_pdf_export_api(results):
+    """Test the new PDF Export API endpoint"""
+    print("\n--- Testing PDF Export API (NEW FEATURES) ---")
+    
+    # Create some test sales data for PDF generation
+    test_sales = []
+    try:
+        # Create a few test sales for the PDF
+        camping_car_sale = create_test_sale("CAMPING-CAR", 65000, 45000, 2)
+        fourgon_sale = create_test_sale("FOURGON", 50000, 30000, 1)
+        
+        for sale_data in [camping_car_sale, fourgon_sale]:
+            response = requests.post(f"{BASE_URL}/sales", json=sale_data, headers=HEADERS, timeout=10)
+            if response.status_code == 200:
+                test_sales.append(response.json())
+    except Exception as e:
+        print(f"⚠️  Could not create test sales for PDF: {str(e)}")
+    
+    # Test POST /api/export-pdf with default period (2025-09-01 to 2026-08-31)
+    try:
+        response = requests.post(f"{BASE_URL}/export-pdf", timeout=30)  # Longer timeout for PDF generation
+        
+        if response.status_code == 200:
+            # Check if response is a PDF file
+            content_type = response.headers.get('content-type', '')
+            if 'application/pdf' in content_type:
+                results.log_pass("POST /api/export-pdf - Default period (PDF generated)")
+                
+                # Check file size (should be > 0)
+                content_length = len(response.content)
+                if content_length > 1000:  # Reasonable PDF size
+                    results.log_pass("POST /api/export-pdf - PDF file size check")
+                else:
+                    results.log_fail("POST /api/export-pdf - File size", f"PDF too small: {content_length} bytes")
+                
+                # Check filename in headers
+                content_disposition = response.headers.get('content-disposition', '')
+                if 'salesboard_report_' in content_disposition:
+                    results.log_pass("POST /api/export-pdf - Filename format")
+                else:
+                    results.log_fail("POST /api/export-pdf - Filename", f"Unexpected filename: {content_disposition}")
+            else:
+                results.log_fail("POST /api/export-pdf - Content type", f"Expected PDF, got: {content_type}")
+        else:
+            results.log_fail("POST /api/export-pdf - Default period", f"HTTP {response.status_code}: {response.text}")
+    except Exception as e:
+        results.log_fail("POST /api/export-pdf - Default period", f"Exception: {str(e)}")
+    
+    # Test POST /api/export-pdf with custom period parameters
+    try:
+        custom_params = {
+            "start_date": "2025-01-01",
+            "end_date": "2025-12-31"
+        }
+        
+        response = requests.post(f"{BASE_URL}/export-pdf", params=custom_params, timeout=30)
+        
+        if response.status_code == 200:
+            content_type = response.headers.get('content-type', '')
+            if 'application/pdf' in content_type:
+                results.log_pass("POST /api/export-pdf - Custom period parameters")
+                
+                # Check filename includes custom dates
+                content_disposition = response.headers.get('content-disposition', '')
+                if '2025-01-01' in content_disposition and '2025-12-31' in content_disposition:
+                    results.log_pass("POST /api/export-pdf - Custom period filename")
+                else:
+                    results.log_fail("POST /api/export-pdf - Custom filename", f"Dates not in filename: {content_disposition}")
+            else:
+                results.log_fail("POST /api/export-pdf - Custom period content", f"Expected PDF, got: {content_type}")
+        else:
+            results.log_fail("POST /api/export-pdf - Custom period", f"HTTP {response.status_code}: {response.text}")
+    except Exception as e:
+        results.log_fail("POST /api/export-pdf - Custom period", f"Exception: {str(e)}")
+    
+    # Test error handling for invalid date formats
+    try:
+        invalid_params = {
+            "start_date": "invalid-date",
+            "end_date": "2025-12-31"
+        }
+        
+        response = requests.post(f"{BASE_URL}/export-pdf", params=invalid_params, timeout=10)
+        
+        if response.status_code == 400:
+            results.log_pass("POST /api/export-pdf - Invalid date format error handling")
+        elif response.status_code == 500:
+            # Check if error message mentions date format
+            error_text = response.text.lower()
+            if 'date' in error_text or 'format' in error_text:
+                results.log_pass("POST /api/export-pdf - Invalid date error handling (500 with date error)")
+            else:
+                results.log_fail("POST /api/export-pdf - Invalid date error", f"Unexpected 500 error: {response.text}")
+        else:
+            results.log_fail("POST /api/export-pdf - Invalid date handling", f"Expected 400/500, got HTTP {response.status_code}")
+    except Exception as e:
+        results.log_fail("POST /api/export-pdf - Invalid date handling", f"Exception: {str(e)}")
+    
+    # Test PDF generation with existing sales data vs empty data
+    try:
+        # Test with a period that should have no sales
+        empty_params = {
+            "start_date": "2020-01-01",
+            "end_date": "2020-12-31"
+        }
+        
+        response = requests.post(f"{BASE_URL}/export-pdf", params=empty_params, timeout=30)
+        
+        if response.status_code == 200:
+            content_type = response.headers.get('content-type', '')
+            if 'application/pdf' in content_type:
+                results.log_pass("POST /api/export-pdf - Empty data period (PDF still generated)")
+            else:
+                results.log_fail("POST /api/export-pdf - Empty data", f"Expected PDF, got: {content_type}")
+        else:
+            results.log_fail("POST /api/export-pdf - Empty data period", f"HTTP {response.status_code}: {response.text}")
+    except Exception as e:
+        results.log_fail("POST /api/export-pdf - Empty data period", f"Exception: {str(e)}")
+    
+    # Clean up test sales created for PDF testing
+    try:
+        for sale in test_sales:
+            requests.delete(f"{BASE_URL}/sales/{sale['id']}", timeout=10)
+    except Exception as e:
+        print(f"⚠️  Could not clean up PDF test sales: {str(e)}")
+
+def test_integration_scenarios(results):
+    """Test integration scenarios between commission settings and PDF export"""
+    print("\n--- Testing Integration Scenarios (NEW FEATURES) ---")
+    
+    try:
+        # 1. Update commission rates and verify stats calculation changes
+        original_response = requests.get(f"{BASE_URL}/commission-rates", timeout=10)
+        if original_response.status_code != 200:
+            results.log_fail("Integration test setup", "Could not get original commission rates")
+            return
+        
+        original_rates = original_response.json()
+        
+        # Create a test sale
+        test_sale = create_test_sale("CAMPING-CAR", 100000, 50000, 2)
+        sale_response = requests.post(f"{BASE_URL}/sales", json=test_sale, headers=HEADERS, timeout=10)
+        if sale_response.status_code != 200:
+            results.log_fail("Integration test setup", "Could not create test sale")
+            return
+        
+        created_sale = sale_response.json()
+        
+        # Get initial stats
+        initial_stats = requests.get(f"{BASE_URL}/stats", timeout=10)
+        if initial_stats.status_code != 200:
+            results.log_fail("Integration test", "Could not get initial stats")
+            return
+        
+        initial_commission = initial_stats.json()["commission_vente"]
+        
+        # Update commission rates (increase CAMPING-CAR rate)
+        updated_rates = {
+            "payplan_rates": {
+                "camping_car": 0.080,  # Increase from 5.5% to 8.0%
+                "fourgon_van": 0.065
+            }
+        }
+        
+        update_response = requests.put(f"{BASE_URL}/commission-rates", json=updated_rates, headers=HEADERS, timeout=10)
+        if update_response.status_code == 200:
+            # Get updated stats
+            updated_stats = requests.get(f"{BASE_URL}/stats", timeout=10)
+            if updated_stats.status_code == 200:
+                updated_commission = updated_stats.json()["commission_vente"]
+                
+                # Commission should have increased (100000 * 0.08 vs 100000 * 0.055)
+                if updated_commission > initial_commission:
+                    results.log_pass("Integration - Commission rate update affects stats calculation")
+                else:
+                    results.log_fail("Integration - Stats calculation", f"Commission not updated: {initial_commission} -> {updated_commission}")
+            else:
+                results.log_fail("Integration - Updated stats", f"HTTP {updated_stats.status_code}")
+        else:
+            results.log_fail("Integration - Rate update", f"HTTP {update_response.status_code}")
+        
+        # 2. Generate PDF report and verify it contains updated configuration
+        pdf_response = requests.post(f"{BASE_URL}/export-pdf", timeout=30)
+        if pdf_response.status_code == 200:
+            content_type = pdf_response.headers.get('content-type', '')
+            if 'application/pdf' in content_type:
+                results.log_pass("Integration - PDF generation with updated configuration")
+            else:
+                results.log_fail("Integration - PDF generation", f"Expected PDF, got: {content_type}")
+        else:
+            results.log_fail("Integration - PDF generation", f"HTTP {pdf_response.status_code}")
+        
+        # 3. Restore original rates
+        restore_response = requests.put(f"{BASE_URL}/commission-rates", json=original_rates, headers=HEADERS, timeout=10)
+        if restore_response.status_code == 200:
+            results.log_pass("Integration - Restore original configuration")
+        else:
+            results.log_fail("Integration - Restore config", f"HTTP {restore_response.status_code}")
+        
+        # Clean up test sale
+        requests.delete(f"{BASE_URL}/sales/{created_sale['id']}", timeout=10)
+        
+    except Exception as e:
+        results.log_fail("Integration scenarios", f"Exception: {str(e)}")
+
 def cleanup_test_data():
     """Clean up test data created during testing"""
     try:
