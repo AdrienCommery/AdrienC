@@ -74,10 +74,10 @@ class CommissionConfig(BaseModel):
     q1_prime_amount: float = 1500.0
     q1_prime_target: int = 35
     ca_prime_thresholds: dict = {
-        "50000": 5000,
-        "60000": 6000,
-        "70000": 7000,
-        "90000": 11000
+        "50": 5000,   # 50 véhicules → 5000€
+        "60": 6000,   # 60 véhicules → 6000€
+        "70": 7000,   # 70 véhicules → 7000€
+        "90": 11000   # 90 véhicules → 11000€
     }
 
 class PeriodStats(BaseModel):
