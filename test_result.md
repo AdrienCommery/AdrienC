@@ -318,8 +318,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Commission Settings API (NEW FEATURE)"
-    - "PDF Export API (NEW FEATURE)"
+    - "Commission Settings Page (NEW FEATURE)"
+    - "PDF Export Feature (NEW FEATURE)"
+    - "Enhanced Navigation and Integration (NEW FEATURE)"
   stuck_tasks: []
   test_all: false
   test_priority: "new_features_complete"
