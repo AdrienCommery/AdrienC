@@ -781,11 +781,16 @@ def main():
         results.summary()
         return
     
-    # Run all test suites
+    # Run all test suites (existing + new features)
     test_sales_crud_operations(results)
     test_commission_calculation_engine(results)
     test_statistics_and_analytics_api(results)
     test_commission_configuration_management(results)
+    
+    # NEW FEATURE TESTS
+    test_commission_settings_api(results)
+    test_pdf_export_api(results)
+    test_integration_scenarios(results)
     
     # Cleanup
     cleanup_test_data()
