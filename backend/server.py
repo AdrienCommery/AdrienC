@@ -39,8 +39,8 @@ class Sale(BaseModel):
     type: VehicleType
     marque: str
     modele: str
-    date_vente: date
-    date_livraison_previsionnelle: date
+    date_vente: str  # Changed from date to str
+    date_livraison_previsionnelle: str  # Changed from date to str
     prix_vente: float
     montant_financement: float
     nombre_pc: int
@@ -53,8 +53,8 @@ class SaleCreate(BaseModel):
     type: VehicleType
     marque: str
     modele: str
-    date_vente: date
-    date_livraison_previsionnelle: date
+    date_vente: str  # Changed from date to str
+    date_livraison_previsionnelle: str  # Changed from date to str
     prix_vente: float
     montant_financement: float
     nombre_pc: int
@@ -102,7 +102,10 @@ async def root():
 async def create_sale(sale: SaleCreate):
     sale_dict = sale.dict()
     sale_obj = Sale(**sale_dict)
-    await db.sales.insert_one(sale_obj.dict())
+    # Convert the pydantic model to dict and ensure datetime is serializable
+    sale_data = sale_obj.dict()
+    sale_data['created_at'] = sale_data['created_at'].isoformat()
+    await db.sales.insert_one(sale_data)
     return sale_obj
 
 @api_router.get("/sales", response_model=List[Sale])
@@ -136,7 +139,8 @@ async def get_commission_config():
     if not config:
         # Create default config
         default_config = CommissionConfig()
-        await db.commission_config.insert_one(default_config.dict())
+        config_data = default_config.dict()
+        await db.commission_config.insert_one(config_data)
         return default_config
     return CommissionConfig(**config)
 
@@ -153,8 +157,9 @@ async def update_commission_config(config: CommissionConfig):
 @api_router.get("/stats")
 async def get_period_stats(start_date: str = "2025-09-01", end_date: str = "2026-08-31"):
     try:
-        start = datetime.strptime(start_date, "%Y-%m-%d")
-        end = datetime.strptime(end_date, "%Y-%m-%d")
+        # Validate date format
+        datetime.strptime(start_date, "%Y-%m-%d")
+        datetime.strptime(end_date, "%Y-%m-%d")
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
     
