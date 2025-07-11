@@ -16,9 +16,36 @@ const VEHICLE_TYPES = {
 const Dashboard = ({ stats, config, onPeriodChange }) => {
   const [startDate, setStartDate] = useState('2025-09-01');
   const [endDate, setEndDate] = useState('2026-08-31');
+  const [isExporting, setIsExporting] = useState(false);
 
   const handlePeriodChange = () => {
     onPeriodChange(startDate, endDate);
+  };
+
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    try {
+      const response = await axios.post(`${API}/export-pdf?start_date=${startDate}&end_date=${endDate}`, {}, {
+        responseType: 'blob'
+      });
+      
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `salesboard_report_${startDate}_${endDate}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      alert('Rapport PDF exporté avec succès !');
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('Erreur lors de l\'export PDF');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const getQ1Status = () => {
