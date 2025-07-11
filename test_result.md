@@ -177,6 +177,39 @@ backend:
         agent: "testing"
         comment: "✅ VERIFIED: Commission configuration management working correctly. GET /api/config returns all required fields with correct default values: CAMPING-CAR rate (5.5%), FOURGON/VAN rate (6.5%), Q1 prime target (35 sales), CA prime thresholds (50k€:5k€, 60k€:6k€, 70k€:7k€, 90k€:11k€). Configuration updates functional."
 
+  - task: "Commission Settings API (NEW FEATURE)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented new Commission Settings API with GET /api/commission-rates and PUT /api/commission-rates endpoints for detailed commission rate management"
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: GET /api/commission-rates working perfectly (9/9 tests passed), but PUT /api/commission-rates failing with HTTP 500 errors due to MongoDB ObjectId serialization issues in response"
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED & VERIFIED: Fixed MongoDB ObjectId serialization issue in PUT /api/commission-rates endpoint by removing '_id' field before serialization. All commission settings tests now pass: GET /api/commission-rates returns structured data (payplan_rates, financing_rates, q1_prime, ca_prime_thresholds), PUT /api/commission-rates successfully updates all rate types (payplan, financing, Q1 prime, CA prime thresholds), rate updates persist correctly, commission calculations update immediately when rates change."
+
+  - task: "PDF Export API (NEW FEATURE)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented PDF Export API with POST /api/export-pdf endpoint for generating comprehensive commission reports with period parameters"
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: PDF Export API working perfectly (7/7 tests passed). POST /api/export-pdf generates valid PDF files with default period (2025-09-01 to 2026-08-31), custom period parameters work correctly, PDF includes comprehensive report with sales data and commission configuration, proper error handling for invalid date formats, generates PDFs even with empty data periods, file size and content-type validation successful."
+
 frontend:
   - task: "Sales Tracking Interface"
     implemented: true
@@ -240,10 +273,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All frontend tasks completed successfully"
+    - "Commission Settings API (NEW FEATURE)"
+    - "PDF Export API (NEW FEATURE)"
   stuck_tasks: []
   test_all: false
-  test_priority: "completed"
+  test_priority: "new_features_complete"
 
 agent_communication:
   - agent: "main"
@@ -260,3 +294,5 @@ agent_communication:
     message: "✅ CA PRIME LOGIC VERIFICATION COMPLETE: Successfully tested and verified the corrected CA Prime logic based on NUMBER OF VEHICLES SOLD instead of sales amount. Key findings: 1) Configuration API ✅ - ca_prime_thresholds now correctly use vehicle numbers as keys ('50', '60', '70', '90') with proper prime amounts (5000€, 6000€, 7000€, 11000€), 2) Stats API ✅ - ca_prime_progress returns INTEGER (vehicle count) not float, 3) Vehicle Count Logic ✅ - ca_prime_progress = vn_livres + vo_livres formula working correctly, 4) Prime Calculation ✅ - All vehicle count thresholds properly configured, 5) Cancelled Sales ✅ - Excluded from vehicle totals as expected, 6) Commission Calculations ✅ - Remain unchanged (still based on sales amounts). Fixed database configuration issue where old sales amount keys were persisted. All 23/23 CA Prime specific tests passed. CA Prime logic is now correctly implemented with vehicle count instead of sales amount."
   - agent: "testing"
     message: "🎯 COMPREHENSIVE CA PRIME FRONTEND TESTING COMPLETED: Conducted extensive testing of the corrected CA Prime logic in the SALESBOARD TPL frontend. VERIFIED ALL REQUIREMENTS: 1) Dashboard CA Prime Gauge ✅ - Shows 'PRIME SUR VENTE - Nombre de Véhicules' title, displays '0 véhicules' to '90 véhicules' labels (not euros), progress shows 'X / 90 véhicules' format, 2) Threshold Display ✅ - Correctly shows '50 véhicules → 5,000€', '60 véhicules → 6,000€', '70 véhicules → 7,000€', '90 véhicules → 11,000€', 3) Vehicle Count Logic ✅ - CA Prime progress = VN Livrés + VO Livrés, CAMPING-CAR counts as VN, FOURGON/VAN count as VO, 4) Sales Integration ✅ - Vehicle count updates when adding new sales, cancelled sales excluded from totals, real-time updates between Dashboard and Sales tabs, 5) Visual Elements ✅ - Gauge progress bar width calculated as (vehicle_count/90)*100%, gauge color changes from red to green at thresholds, threshold highlighting based on vehicle count achieved, 6) Period Management ✅ - Date filtering works with vehicle count logic, period changes affect CA Prime calculations. TESTED SCENARIOS: Added CAMPING-CAR, FOURGON, and VAN sales, verified cancellation functionality, tested period filtering, confirmed real-time dashboard updates. CA Prime frontend implementation is FULLY FUNCTIONAL and correctly displays vehicle count instead of sales amount."
+  - agent: "testing"
+    message: "🚀 NEW FEATURES TESTING COMPLETE: Successfully tested all NEW SALESBOARD TPL backend features requested in review. COMMISSION SETTINGS API ✅ - GET /api/commission-rates returns structured data for configuration page (payplan_rates, financing_rates, q1_prime, ca_prime_thresholds), PUT /api/commission-rates updates all commission rate types successfully, FIXED MongoDB ObjectId serialization issue that was causing 500 errors. PDF EXPORT API ✅ - POST /api/export-pdf generates valid PDF reports with default and custom periods, includes comprehensive sales data and commission configuration, proper error handling implemented. INTEGRATION SCENARIOS ✅ - Commission rate updates immediately affect stats calculations, PDF generation includes updated configuration, all endpoints handle errors gracefully. All new features are production-ready and fully functional."
