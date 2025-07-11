@@ -231,9 +231,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Sales CRUD Operations"
-    - "Statistics and Analytics API"
-    - "Commission Calculation Engine"
+    - "Sales Tracking Interface"
+    - "Dashboard with Dynamic Gauges"
+    - "Period Management and Real-time Updates"
   stuck_tasks:
     - "Sales Tracking Interface"
     - "Dashboard with Dynamic Gauges"
