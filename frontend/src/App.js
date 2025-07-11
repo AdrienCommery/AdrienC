@@ -133,34 +133,34 @@ const Dashboard = ({ stats, config, onPeriodChange }) => {
 
         {/* CA Prime Gauge */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">💰 PRIME SUR VENTE - CA VN + VO</h2>
+          <h2 className="text-xl font-semibold mb-4">💰 PRIME SUR VENTE - Nombre de Véhicules</h2>
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-gray-600">0€</span>
+            <span className="text-sm text-gray-600">0 véhicules</span>
             <span className="font-semibold">Prime: {caPrime.prime}€</span>
-            <span className="text-sm text-gray-600">90,000€</span>
+            <span className="text-sm text-gray-600">90 véhicules</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-8">
             <div 
               className={`h-8 rounded-full transition-all duration-300 ${caPrime.color}`}
-              style={{ width: `${Math.min((stats.ca_prime_progress / 90000) * 100, 100)}%` }}
+              style={{ width: `${Math.min((stats.ca_prime_progress / 90) * 100, 100)}%` }}
             ></div>
           </div>
           <div className="text-center mt-2">
-            <span className="text-lg font-semibold">{stats.ca_prime_progress.toLocaleString()}€ / 90,000€</span>
+            <span className="text-lg font-semibold">{stats.ca_prime_progress} / 90 véhicules</span>
           </div>
           <div className="mt-4 text-sm text-gray-600">
             <div className="flex justify-between">
-              <span className={stats.ca_prime_progress >= 50000 ? 'text-green-600 font-semibold' : ''}>
-                50k€ → 5,000€
+              <span className={stats.ca_prime_progress >= 50 ? 'text-green-600 font-semibold' : ''}>
+                50 véhicules → 5,000€
               </span>
-              <span className={stats.ca_prime_progress >= 60000 ? 'text-green-600 font-semibold' : ''}>
-                60k€ → 6,000€
+              <span className={stats.ca_prime_progress >= 60 ? 'text-green-600 font-semibold' : ''}>
+                60 véhicules → 6,000€
               </span>
-              <span className={stats.ca_prime_progress >= 70000 ? 'text-green-600 font-semibold' : ''}>
-                70k€ → 7,000€
+              <span className={stats.ca_prime_progress >= 70 ? 'text-green-600 font-semibold' : ''}>
+                70 véhicules → 7,000€
               </span>
-              <span className={stats.ca_prime_progress >= 90000 ? 'text-green-600 font-semibold' : ''}>
-                90k€ → 11,000€
+              <span className={stats.ca_prime_progress >= 90 ? 'text-green-600 font-semibold' : ''}>
+                90 véhicules → 11,000€
               </span>
             </div>
           </div>
