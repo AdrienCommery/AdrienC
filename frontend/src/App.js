@@ -98,6 +98,13 @@ const Dashboard = ({ stats, config, onPeriodChange }) => {
             >
               Actualiser
             </button>
+            <button
+              onClick={handleExportPDF}
+              disabled={isExporting}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-gray-400"
+            >
+              {isExporting ? 'Export en cours...' : '📄 Export PDF'}
+            </button>
           </div>
         </div>
 
