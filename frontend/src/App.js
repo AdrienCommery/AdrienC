@@ -450,6 +450,8 @@ const CommissionSettings = ({ onSettingsChange }) => {
     </div>
   );
 };
+
+const SalesTracking = ({ onSalesChange }) => {
   const [sales, setSales] = useState([]);
   const [formData, setFormData] = useState({
     nom: '',
@@ -814,6 +816,11 @@ const App = () => {
     loadStats();
   };
 
+  const handleSettingsChange = () => {
+    loadConfig();
+    loadStats();
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Navigation */}
@@ -841,6 +848,16 @@ const App = () => {
               >
                 📋 Suivi des Ventes
               </button>
+              <button
+                onClick={() => setCurrentPage('settings')}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  currentPage === 'settings'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                🛠️ Paramétrage
+              </button>
             </div>
           </div>
         </div>
@@ -856,6 +873,9 @@ const App = () => {
       )}
       {currentPage === 'sales' && (
         <SalesTracking onSalesChange={handleSalesChange} />
+      )}
+      {currentPage === 'settings' && (
+        <CommissionSettings onSettingsChange={handleSettingsChange} />
       )}
     </div>
   );
