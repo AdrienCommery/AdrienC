@@ -220,7 +220,236 @@ const Dashboard = ({ stats, config, onPeriodChange }) => {
   );
 };
 
-const SalesTracking = ({ onSalesChange }) => {
+const CommissionSettings = ({ onSettingsChange }) => {
+  const [rates, setRates] = useState({
+    payplan_rates: {
+      camping_car: 0.055,
+      fourgon_van: 0.065
+    },
+    financing_rates: {
+      "0": 0.005,
+      "1": 0.060,
+      "2": 0.065,
+      "3": 0.075,
+      "4": 0.080
+    },
+    q1_prime: {
+      amount: 1500.0,
+      target: 35
+    },
+    ca_prime_thresholds: {
+      "50": 5000,
+      "60": 6000,
+      "70": 7000,
+      "90": 11000
+    }
+  });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    loadRates();
+  }, []);
+
+  const loadRates = async () => {
+    try {
+      const response = await axios.get(`${API}/commission-rates`);
+      setRates(response.data);
+    } catch (error) {
+      console.error('Error loading rates:', error);
+    }
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
+    setMessage('');
+    try {
+      await axios.put(`${API}/commission-rates`, rates);
+      setMessage('Configuration sauvegardée avec succès !');
+      onSettingsChange();
+    } catch (error) {
+      console.error('Error saving rates:', error);
+      setMessage('Erreur lors de la sauvegarde');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updatePayplanRate = (type, value) => {
+    setRates(prev => ({
+      ...prev,
+      payplan_rates: {
+        ...prev.payplan_rates,
+        [type]: parseFloat(value)
+      }
+    }));
+  };
+
+  const updateFinancingRate = (pc, value) => {
+    setRates(prev => ({
+      ...prev,
+      financing_rates: {
+        ...prev.financing_rates,
+        [pc]: parseFloat(value)
+      }
+    }));
+  };
+
+  const updateQ1Prime = (field, value) => {
+    setRates(prev => ({
+      ...prev,
+      q1_prime: {
+        ...prev.q1_prime,
+        [field]: field === 'amount' ? parseFloat(value) : parseInt(value)
+      }
+    }));
+  };
+
+  const updateCAPrimeThreshold = (threshold, value) => {
+    setRates(prev => ({
+      ...prev,
+      ca_prime_thresholds: {
+        ...prev.ca_prime_thresholds,
+        [threshold]: parseInt(value)
+      }
+    }));
+  };
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">🛠️ Paramétrage des Commissions</h1>
+        
+        {message && (
+          <div className={`mb-6 p-4 rounded-lg ${message.includes('succès') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            {message}
+          </div>
+        )}
+
+        {/* PAYPLAN Rates */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">📑 PAYPLAN - Taux de Commission</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                CAMPING-CAR (%)
+              </label>
+              <input
+                type="number"
+                step="0.001"
+                value={rates.payplan_rates.camping_car}
+                onChange={(e) => updatePayplanRate('camping_car', e.target.value)}
+                className="w-full border rounded px-3 py-2"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Actuel: {(rates.payplan_rates.camping_car * 100).toFixed(1)}%
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                FOURGON ou VAN (%)
+              </label>
+              <input
+                type="number"
+                step="0.001"
+                value={rates.payplan_rates.fourgon_van}
+                onChange={(e) => updatePayplanRate('fourgon_van', e.target.value)}
+                className="w-full border rounded px-3 py-2"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Actuel: {(rates.payplan_rates.fourgon_van * 100).toFixed(1)}%
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Financing Rates */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">📑 FINANCEMENT - Taux selon nombre de PC</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {Object.entries(rates.financing_rates).map(([pc, rate]) => (
+              <div key={pc}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {pc} PC
+                </label>
+                <input
+                  type="number"
+                  step="0.001"
+                  value={rate}
+                  onChange={(e) => updateFinancingRate(pc, e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  {(rate * 100).toFixed(1)}%
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Q1 Prime */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">🎯 PRIME Q1 - Configuration</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Montant de la Prime (€)
+              </label>
+              <input
+                type="number"
+                value={rates.q1_prime.amount}
+                onChange={(e) => updateQ1Prime('amount', e.target.value)}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Objectif de ventes
+              </label>
+              <input
+                type="number"
+                value={rates.q1_prime.target}
+                onChange={(e) => updateQ1Prime('target', e.target.value)}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* CA Prime Thresholds */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">💰 PRIME CA - Seuils par nombre de véhicules</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Object.entries(rates.ca_prime_thresholds).map(([threshold, amount]) => (
+              <div key={threshold}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {threshold} véhicules → Prime (€)
+                </label>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => updateCAPrimeThreshold(threshold, e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Save Button */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <button
+            onClick={handleSave}
+            disabled={loading}
+            className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 font-semibold"
+          >
+            {loading ? 'Sauvegarde en cours...' : '💾 Sauvegarder la Configuration'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
   const [sales, setSales] = useState([]);
   const [formData, setFormData] = useState({
     nom: '',
