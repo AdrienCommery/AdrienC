@@ -232,7 +232,7 @@ async def get_period_stats(start_date: str = "2025-09-01", end_date: str = "2026
         ca_mensuel=ca_mensuel,
         vehicules_livres_ce_mois=vehicules_livres_ce_mois,
         q1_prime_progress=q1_progress,
-        ca_prime_progress=ca_cumule,
+        ca_prime_progress=vn_livres + vo_livres,  # Total vehicles sold (VN + VO)
         commission_vente=commission_vente,
         commission_financement=commission_financement
     )
