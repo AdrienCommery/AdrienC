@@ -156,39 +156,48 @@ backend:
 frontend:
   - task: "Sales Tracking Interface"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented sales form with all required fields, table with filters, cancellation toggle"
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: Frontend UI works perfectly but backend integration fails. Sales form submissions return 500 errors, sales don't persist in table, no cancel/delete buttons appear. Backend API endpoints are not working properly."
   
   - task: "Dashboard with Dynamic Gauges"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented dynamic dashboard with Q1 prime gauge (0-35), CA prime gauge (0-90k€), commission displays"
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: Dashboard UI displays correctly but shows all zeros. Stats API returns 404 errors, preventing real-time updates. All gauges, bubbles, and commission displays are visually correct but not receiving data from backend."
   
   - task: "Period Management and Real-time Updates"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented period selector with default Sept 2025 - Aug 2026, real-time calculation updates"
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: Period selector UI works and makes API calls, but backend stats endpoint returns 404 errors. Real-time updates cannot function because sales data is not persisting due to backend API failures."
 
 metadata:
   created_by: "main_agent"
