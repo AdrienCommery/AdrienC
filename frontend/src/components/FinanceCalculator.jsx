@@ -169,7 +169,7 @@ const FinanceCalculator = () => {
                       id="coeffComplementaire"
                       type="number"
                       step="0.001"
-                      placeholder="ex: 0.015"
+                      placeholder="ex: 1.5"
                       value={formData.coefficientComplementaire}
                       onChange={(e) => handleInputChange('coefficientComplementaire', e.target.value)}
                     />
