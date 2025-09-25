@@ -33,9 +33,9 @@ const FinanceCalculator = () => {
   // Recalculate when form data changes
   useEffect(() => {
     const montant = parseFloat(formData.montantFinancer) || 0;
-    const coeffEmprunteur = parseFloat(formData.coefficientEmprunteur) || 0;
-    const coeffCoEmprunteur = parseFloat(formData.coefficientCoEmprunteur) || 0;
-    const coeffComplementaire = parseFloat(formData.coefficientComplementaire) || 0;
+    const coeffEmprunteur = (parseFloat(formData.coefficientEmprunteur) || 0) / 100;
+    const coeffCoEmprunteur = (parseFloat(formData.coefficientCoEmprunteur) || 0) / 100;
+    const coeffComplementaire = (parseFloat(formData.coefficientComplementaire) || 0) / 100;
     const extension = parseFloat(formData.extensionGarantie) || 0;
     const revision = parseFloat(formData.revision) || 0;
 
