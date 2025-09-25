@@ -4,8 +4,8 @@ from starlette.middleware.cors import CORSMiddleware
 import os
 import logging
 from pathlib import Path
-from .routes.calculations import router as calculations_router
-from .database import get_db_client
+from routes.calculations import router as calculations_router
+from database import get_db_client
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
