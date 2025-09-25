@@ -12,6 +12,7 @@ function App() {
           <Route path="/" element={<FinanceCalculator />} />
         </Routes>
       </BrowserRouter>
+      <Toaster />
     </div>
   );
 }
