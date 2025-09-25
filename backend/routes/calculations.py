@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from ..models.finance import FinanceCalculation, FinanceCalculationCreate
-from ..database import get_database
+from models.finance import FinanceCalculation, FinanceCalculationCreate
+from database import get_database
 import logging
 
 logger = logging.getLogger(__name__)
