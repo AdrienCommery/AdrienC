@@ -155,7 +155,7 @@ const FinanceCalculator = () => {
                       id="coeffCoEmprunteur"
                       type="number"
                       step="0.001"
-                      placeholder="ex: 0.025"
+                      placeholder="ex: 2.5"
                       value={formData.coefficientCoEmprunteur}
                       onChange={(e) => handleInputChange('coefficientCoEmprunteur', e.target.value)}
                     />
